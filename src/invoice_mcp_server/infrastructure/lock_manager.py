@@ -10,7 +10,7 @@ Provides:
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from invoice_mcp_server.shared.logging import get_logger
@@ -49,7 +49,7 @@ class LockManager:
         self,
         resource_name: str,
         timeout: float = 30.0,
-    ):
+    ) -> AsyncIterator[None]:
         """
         Acquire a lock for a named resource with timeout.
 

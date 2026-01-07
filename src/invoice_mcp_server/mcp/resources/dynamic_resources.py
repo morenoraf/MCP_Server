@@ -9,13 +9,15 @@ Dynamic resources provide real-time data such as:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from datetime import datetime
-from decimal import Decimal
 
 from invoice_mcp_server.mcp.primitives import DynamicResource
 from invoice_mcp_server.domain.models import InvoiceStatus
 from invoice_mcp_server.shared.logging import get_logger
+
+if TYPE_CHECKING:
+    from invoice_mcp_server.mcp.server import InvoiceMCPServer
 
 logger = get_logger(__name__)
 
@@ -63,7 +65,7 @@ class CustomerDetailResource(DynamicResource):
     name = "Customer Detail"
     description = "Detailed information about a specific customer"
 
-    def __init__(self, server, customer_id: str | None = None):
+    def __init__(self, server: InvoiceMCPServer, customer_id: str | None = None) -> None:
         """Initialize with optional customer ID."""
         super().__init__(server)
         self.customer_id = customer_id
@@ -150,7 +152,7 @@ class InvoiceDetailResource(DynamicResource):
     name = "Invoice Detail"
     description = "Detailed information about a specific invoice"
 
-    def __init__(self, server, invoice_id: str | None = None):
+    def __init__(self, server: InvoiceMCPServer, invoice_id: str | None = None) -> None:
         """Initialize with optional invoice ID."""
         super().__init__(server)
         self.invoice_id = invoice_id

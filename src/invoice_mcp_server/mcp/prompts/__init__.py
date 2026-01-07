@@ -22,9 +22,10 @@ from invoice_mcp_server.mcp.prompts.prompts import (
     ProcessPaymentPrompt,
     GenerateReportPrompt,
 )
+from invoice_mcp_server.mcp.primitives import Prompt
 
 
-def get_all_prompts():
+def get_all_prompts() -> list[type[Prompt]]:
     """Return list of all available prompt classes."""
     return [
         CreateInvoicePrompt,

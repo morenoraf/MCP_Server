@@ -21,7 +21,7 @@ from invoice_mcp_server.domain.models import (
 )
 from invoice_mcp_server.shared.config import Config
 from invoice_mcp_server.shared.logging import get_logger
-from invoice_mcp_server.shared.exceptions import NotFoundError, BusinessLogicError
+from invoice_mcp_server.shared.exceptions import NotFoundError
 
 logger = get_logger(__name__)
 

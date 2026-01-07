@@ -10,7 +10,6 @@ from __future__ import annotations
 from datetime import datetime, date
 from decimal import Decimal
 from enum import Enum
-from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator, computed_field
@@ -103,7 +102,7 @@ class LineItem(BaseModel):
     quantity: Decimal = Field(..., gt=0)
     unit_price: Decimal = Field(..., ge=0)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def line_total(self) -> Decimal:
         """Calculate line total before VAT."""
@@ -151,25 +150,25 @@ class Invoice(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def subtotal(self) -> Decimal:
         """Calculate subtotal before VAT."""
         return sum((item.line_total for item in self.items), Decimal("0"))
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def vat_amount(self) -> Decimal:
         """Calculate VAT amount."""
         return self.subtotal * self.vat_rate
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def total(self) -> Decimal:
         """Calculate total including VAT."""
         return self.subtotal + self.vat_amount
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def balance_due(self) -> Decimal:
         """Calculate remaining balance."""

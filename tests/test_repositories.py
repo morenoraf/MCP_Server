@@ -16,6 +16,7 @@ from invoice_mcp_server.infrastructure.repositories import (
     InvoiceRepository,
 )
 from invoice_mcp_server.domain.models import Customer, Invoice, LineItem, InvoiceStatus
+from invoice_mcp_server.shared.exceptions import NotFoundError
 
 
 class TestCustomerRepository:
@@ -51,10 +52,10 @@ class TestCustomerRepository:
 
     @pytest.mark.asyncio
     async def test_get_nonexistent_customer(self, database: Database) -> None:
-        """Test getting a nonexistent customer."""
+        """Test getting a nonexistent customer raises NotFoundError."""
         repo = CustomerRepository(database)
-        result = await repo.get("nonexistent")
-        assert result is None
+        with pytest.raises(NotFoundError):
+            await repo.get("nonexistent")
 
     @pytest.mark.asyncio
     async def test_list_customers(self, database: Database) -> None:
@@ -102,8 +103,10 @@ class TestCustomerRepository:
         await repo.create(customer)
 
         await repo.delete("delete-cust")
-        result = await repo.get("delete-cust")
-        assert result is None
+
+        # Verify customer is deleted by checking it raises NotFoundError
+        with pytest.raises(NotFoundError):
+            await repo.get("delete-cust")
 
 
 class TestInvoiceRepository:
@@ -179,7 +182,7 @@ class TestInvoiceRepository:
 
     @pytest.mark.asyncio
     async def test_add_line_item(self, database: Database) -> None:
-        """Test adding a line item to invoice."""
+        """Test adding a line item to invoice via update."""
         customer_repo = CustomerRepository(database)
         customer = Customer(
             id="item-cust",
@@ -196,12 +199,15 @@ class TestInvoiceRepository:
         )
         await repo.create(invoice)
 
+        # Get invoice, add item, then update
+        invoice = await repo.get("item-inv")
         item = LineItem(
             description="Test Service",
             quantity=2,
             unit_price=Decimal("100.00"),
         )
-        await repo.add_item("item-inv", item)
+        invoice.add_item(item)
+        await repo.update(invoice)
 
         result = await repo.get("item-inv")
         assert result is not None
@@ -210,7 +216,7 @@ class TestInvoiceRepository:
 
     @pytest.mark.asyncio
     async def test_update_status(self, database: Database) -> None:
-        """Test updating invoice status."""
+        """Test updating invoice status via update."""
         customer_repo = CustomerRepository(database)
         customer = Customer(
             id="status-cust",
@@ -227,11 +233,14 @@ class TestInvoiceRepository:
         )
         await repo.create(invoice)
 
-        await repo.update_status("status-inv", InvoiceStatus.SENT)
+        # Get invoice, change status, then update
+        invoice = await repo.get("status-inv")
+        invoice.status = InvoiceStatus.ISSUED
+        await repo.update(invoice)
 
         result = await repo.get("status-inv")
         assert result is not None
-        assert result.status == InvoiceStatus.SENT
+        assert result.status == InvoiceStatus.ISSUED
 
     @pytest.mark.asyncio
     async def test_get_by_customer(self, database: Database) -> None:

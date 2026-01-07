@@ -159,6 +159,8 @@ class Database:
         if not self._connection:
             await self.connect()
 
+        assert self._connection is not None  # Satisfied by connect()
+
         try:
             if params:
                 cursor = await self._connection.execute(query, params)
@@ -181,6 +183,8 @@ class Database:
         """Execute a query with multiple parameter sets."""
         if not self._connection:
             await self.connect()
+
+        assert self._connection is not None  # Satisfied by connect()
 
         try:
             await self._connection.executemany(query, params_list)

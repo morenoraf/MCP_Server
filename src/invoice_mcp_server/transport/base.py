@@ -8,7 +8,8 @@ This enables swapping transports without changing business logic.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, AsyncIterator
+from collections.abc import AsyncGenerator
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from invoice_mcp_server.mcp.server import InvoiceMCPServer
@@ -61,9 +62,9 @@ class Transport(ABC):
         pass
 
     @abstractmethod
-    async def receive(self) -> AsyncIterator[MCPRequest]:
+    def receive(self) -> AsyncGenerator[MCPRequest, None]:
         """Receive incoming request messages."""
-        pass
+        ...
 
     async def run(self) -> None:
         """

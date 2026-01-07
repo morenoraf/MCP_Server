@@ -116,9 +116,11 @@ class TestToolDefinition:
         tool = ToolDefinition(
             name="test_tool",
             description="A test tool",
+            inputSchema={"type": "object", "properties": {}},
         )
         assert tool.name == "test_tool"
         assert tool.description == "A test tool"
+        assert tool.inputSchema is not None
 
     def test_with_input_schema(self) -> None:
         """Test tool with input schema."""

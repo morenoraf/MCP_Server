@@ -10,16 +10,11 @@ The InvoiceMCPServer class is the central component that:
 from __future__ import annotations
 
 import json
-from typing import Any, TYPE_CHECKING
 
 from invoice_mcp_server.mcp.protocol import (
     MCPRequest,
     MCPResponse,
     MCPMethod,
-    MCPError,
-    ToolDefinition,
-    ResourceDefinition,
-    PromptDefinition,
     ToolResult,
     ContentItem,
     ServerCapabilities,

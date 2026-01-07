@@ -9,13 +9,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-import sys
 from typing import Any
 
 import click
 
 from invoice_mcp_server.sdk.client import InvoiceSDK
-from invoice_mcp_server.shared.config import Config
 
 
 def run_async(coro: Any) -> Any:

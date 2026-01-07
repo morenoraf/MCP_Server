@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 from typing import Any, TYPE_CHECKING
-from decimal import Decimal
 
 from invoice_mcp_server.shared.logging import get_logger
 
@@ -17,6 +16,21 @@ if TYPE_CHECKING:
     from invoice_mcp_server.sdk.client import InvoiceSDK
 
 logger = get_logger(__name__)
+
+
+def _extract_data(result: dict[str, Any]) -> Any:
+    """Extract data from MCP resource response."""
+    contents = result.get("contents", [])
+    if not contents:
+        return None
+
+    text = contents[0].get("text", "{}")
+    data = json.loads(text)
+
+    # Resources return {"type": "...", "data": [...]}
+    if isinstance(data, dict) and "data" in data:
+        return data["data"]
+    return data
 
 
 class CustomerOperations:
@@ -60,16 +74,16 @@ class CustomerOperations:
     async def list_all(self) -> list[dict[str, Any]]:
         """List all customers."""
         result = await self._sdk.read_resource("invoice://customers/list")
-        contents = result.get("contents", [])
-        if contents:
-            return json.loads(contents[0].get("text", "[]"))
+        data = _extract_data(result)
+        if isinstance(data, list):
+            return data
         return []
 
     async def get(self, customer_id: str) -> dict[str, Any] | None:
         """Get a specific customer by ID."""
         customers = await self.list_all()
         for customer in customers:
-            if customer.get("id") == customer_id:
+            if isinstance(customer, dict) and customer.get("id") == customer_id:
                 return customer
         return None
 
@@ -145,17 +159,17 @@ class InvoiceOperations:
     async def list_all(self) -> list[dict[str, Any]]:
         """List all invoices."""
         result = await self._sdk.read_resource("invoice://invoices/list")
-        contents = result.get("contents", [])
-        if contents:
-            return json.loads(contents[0].get("text", "[]"))
+        data = _extract_data(result)
+        if isinstance(data, list):
+            return data
         return []
 
     async def get_overdue(self) -> list[dict[str, Any]]:
         """Get overdue invoices."""
         result = await self._sdk.read_resource("invoice://invoices/overdue")
-        contents = result.get("contents", [])
-        if contents:
-            return json.loads(contents[0].get("text", "[]"))
+        data = _extract_data(result)
+        if isinstance(data, list):
+            return data
         return []
 
 
@@ -168,33 +182,32 @@ class ReportOperations:
 
     async def get_statistics(self) -> dict[str, Any]:
         """Get overall statistics."""
-        result = await self._sdk.read_resource("invoice://statistics/overview")
-        contents = result.get("contents", [])
-        if contents:
-            return json.loads(contents[0].get("text", "{}"))
+        result = await self._sdk.read_resource("invoice://statistics")
+        data = _extract_data(result)
+        if isinstance(data, dict):
+            return data
         return {}
 
     async def get_recent_invoices(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get recent invoices."""
         result = await self._sdk.read_resource("invoice://invoices/recent")
-        contents = result.get("contents", [])
-        if contents:
-            invoices = json.loads(contents[0].get("text", "[]"))
-            return invoices[:limit]
+        data = _extract_data(result)
+        if isinstance(data, list):
+            return data[:limit]
         return []
 
     async def get_config(self) -> dict[str, Any]:
         """Get server configuration."""
         result = await self._sdk.read_resource("invoice://config")
-        contents = result.get("contents", [])
-        if contents:
-            return json.loads(contents[0].get("text", "{}"))
+        data = _extract_data(result)
+        if isinstance(data, dict):
+            return data
         return {}
 
     async def get_vat_rates(self) -> dict[str, Any]:
         """Get VAT rates configuration."""
         result = await self._sdk.read_resource("invoice://vat-rates")
-        contents = result.get("contents", [])
-        if contents:
-            return json.loads(contents[0].get("text", "{}"))
+        data = _extract_data(result)
+        if isinstance(data, dict):
+            return data
         return {}

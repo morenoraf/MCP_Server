@@ -8,7 +8,8 @@ All operations go through the SDK layer.
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
+from typing import Any
+from collections.abc import AsyncGenerator
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -74,7 +75,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_web_app() -> FastAPI:
     """Create and configure the FastAPI application."""
-    config = Config()
+    Config()
 
     app = FastAPI(
         title="Invoice MCP Server",

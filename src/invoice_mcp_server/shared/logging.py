@@ -14,7 +14,7 @@ import logging
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from invoice_mcp_server.shared.config import Config
@@ -117,7 +117,7 @@ class LogContext:
         """Initialize with logger and context values."""
         self.logger = logger
         self.context = context
-        self._old_factory: logging.Callable[..., logging.LogRecord] | None = None
+        self._old_factory: Callable[..., logging.LogRecord] | None = None
 
     def __enter__(self) -> LogContext:
         """Enter context and set up record factory."""

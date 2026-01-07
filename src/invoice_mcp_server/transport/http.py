@@ -15,7 +15,8 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import AsyncIterator, Any
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from invoice_mcp_server.transport.base import Transport
 from invoice_mcp_server.mcp.protocol import MCPRequest, MCPResponse
@@ -49,8 +50,8 @@ class HttpTransport(Transport):
         """Initialize HTTP transport."""
         super().__init__()
         self._config = Config()
-        self._app = None
-        self._site = None
+        self._app: Any = None  # aiohttp.web.Application
+        self._site: Any = None  # aiohttp.web.TCPSite
         self._request_queue: asyncio.Queue[MCPRequest] = asyncio.Queue()
         self._pending_responses: dict[str | int, asyncio.Future[MCPResponse]] = {}
 
@@ -94,14 +95,12 @@ class HttpTransport(Transport):
 
     def _setup_routes(self) -> None:
         """Set up HTTP routes."""
-        from aiohttp import web
-
         self._app.router.add_post("/mcp", self._handle_mcp_request)
         self._app.router.add_get("/mcp/sse", self._handle_sse)
         self._app.router.add_get("/health", self._handle_health)
         self._app.router.add_options("/mcp", self._handle_cors)
 
-    async def _handle_mcp_request(self, request) -> Any:
+    async def _handle_mcp_request(self, request: Any) -> Any:
         """Handle incoming MCP request."""
         from aiohttp import web
 
@@ -163,7 +162,7 @@ class HttpTransport(Transport):
                 headers=headers,
             )
 
-    async def _handle_sse(self, request) -> Any:
+    async def _handle_sse(self, request: Any) -> Any:
         """Handle SSE connection for streaming responses."""
         from aiohttp import web
 
@@ -191,7 +190,7 @@ class HttpTransport(Transport):
 
         return response
 
-    async def _handle_health(self, request) -> Any:
+    async def _handle_health(self, request: Any) -> Any:
         """Handle health check endpoint."""
         from aiohttp import web
 
@@ -201,7 +200,7 @@ class HttpTransport(Transport):
             "version": "1.0.0",
         })
 
-    async def _handle_cors(self, request) -> Any:
+    async def _handle_cors(self, request: Any) -> Any:
         """Handle CORS preflight requests."""
         from aiohttp import web
 
@@ -234,7 +233,7 @@ class HttpTransport(Transport):
             if not future.done():
                 future.set_result(response)
 
-    async def receive(self) -> AsyncIterator[MCPRequest]:
+    async def receive(self) -> AsyncGenerator[MCPRequest, None]:
         """Receive requests from the queue."""
         while self._running:
             try:

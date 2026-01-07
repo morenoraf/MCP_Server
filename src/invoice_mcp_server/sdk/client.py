@@ -7,12 +7,19 @@ All operations pass through this SDK layer.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from invoice_mcp_server.mcp.server import InvoiceMCPServer
-from invoice_mcp_server.mcp.protocol import MCPRequest, MCPResponse
+from invoice_mcp_server.mcp.protocol import MCPRequest
 from invoice_mcp_server.shared.logging import get_logger
 from invoice_mcp_server.shared.config import Config
+
+if TYPE_CHECKING:
+    from invoice_mcp_server.sdk.operations import (
+        CustomerOperations,
+        InvoiceOperations,
+        ReportOperations,
+    )
 
 logger = get_logger(__name__)
 

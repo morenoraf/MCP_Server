@@ -17,8 +17,8 @@ import asyncio
 import json
 import sys
 import threading
+from collections.abc import AsyncGenerator
 from queue import Queue, Empty
-from typing import AsyncIterator
 
 from invoice_mcp_server.transport.base import Transport
 from invoice_mcp_server.mcp.protocol import MCPRequest, MCPResponse
@@ -121,7 +121,7 @@ class StdioTransport(Transport):
                 cause=e if isinstance(e, Exception) else None,
             )
 
-    async def receive(self) -> AsyncIterator[MCPRequest]:
+    async def receive(self) -> AsyncGenerator[MCPRequest, None]:
         """Receive requests from stdin."""
         while self._running:
             try:

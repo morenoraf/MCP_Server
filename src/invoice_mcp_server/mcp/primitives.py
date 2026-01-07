@@ -10,9 +10,8 @@ This module defines the base classes for MCP primitives:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Awaitable, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
-from pydantic import BaseModel
 
 from invoice_mcp_server.mcp.protocol import (
     ToolDefinition,

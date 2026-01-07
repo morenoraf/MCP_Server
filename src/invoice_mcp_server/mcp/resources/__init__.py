@@ -4,6 +4,7 @@ MCP Resources module - Read-only data access.
 Contains resource implementations for:
     - Static resources: Configuration, VAT rates
     - Dynamic resources: Customers, Invoices, Statistics
+    - Sync resources: Agent statuses, workspaces
 """
 
 __all__ = [
@@ -32,11 +33,13 @@ from invoice_mcp_server.mcp.resources.dynamic_resources import (
     OverdueInvoicesResource,
     StatisticsResource,
 )
+from invoice_mcp_server.mcp.resources.sync_resources import get_sync_resources
+from invoice_mcp_server.mcp.primitives import Resource
 
 
-def get_all_resources():
+def get_all_resources() -> list[type[Resource]]:
     """Return list of all available resource classes."""
-    return [
+    resources = [
         ConfigResource,
         VATRatesResource,
         CustomersListResource,
@@ -45,3 +48,6 @@ def get_all_resources():
         OverdueInvoicesResource,
         StatisticsResource,
     ]
+    # Add multi-agent sync resources
+    resources.extend(get_sync_resources())
+    return resources

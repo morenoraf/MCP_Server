@@ -24,28 +24,27 @@ from invoice_mcp_server.domain.models import (
 class TestSerialNumber:
     """Tests for SerialNumber model."""
 
-    def test_generate(self) -> None:
-        """Test serial number generation."""
-        serial = SerialNumber.generate("INV")
+    def test_create_serial(self) -> None:
+        """Test serial number creation."""
+        serial = SerialNumber(prefix="INV")
         assert serial.prefix == "INV"
-        assert serial.number > 0
-        assert serial.formatted.startswith("INV-")
+        assert serial.current_number == 0
+        assert serial.year == datetime.now().year
 
-    def test_formatted_output(self) -> None:
-        """Test formatted string output."""
-        serial = SerialNumber(prefix="INV", number=42)
-        assert serial.formatted == "INV-000042"
+    def test_next_number(self) -> None:
+        """Test generating next serial number."""
+        serial = SerialNumber(prefix="INV", current_number=41)
+        next_num = serial.next_number()
+        assert next_num == f"INV-{datetime.now().year}-000042"
+        assert serial.current_number == 42
 
-    def test_parse_valid(self) -> None:
-        """Test parsing valid serial number."""
-        serial = SerialNumber.parse("INV-000042")
-        assert serial.prefix == "INV"
-        assert serial.number == 42
-
-    def test_parse_invalid(self) -> None:
-        """Test parsing invalid serial number."""
-        with pytest.raises(ValueError):
-            SerialNumber.parse("INVALID")
+    def test_sequential_generation(self) -> None:
+        """Test sequential number generation."""
+        serial = SerialNumber(prefix="REC")
+        num1 = serial.next_number()
+        num2 = serial.next_number()
+        assert num1.endswith("-000001")
+        assert num2.endswith("-000002")
 
 
 class TestCustomer:
@@ -116,14 +115,14 @@ class TestLineItem:
         assert item.quantity == 2
         assert item.unit_price == Decimal("100.00")
 
-    def test_total_calculation(self) -> None:
-        """Test total calculation."""
+    def test_line_total_calculation(self) -> None:
+        """Test line_total calculation."""
         item = LineItem(
             description="Service",
             quantity=3,
             unit_price=Decimal("50.00"),
         )
-        assert item.total == Decimal("150.00")
+        assert item.line_total == Decimal("150.00")
 
     def test_negative_quantity(self) -> None:
         """Test negative quantity validation."""
@@ -232,27 +231,42 @@ class TestInvoice:
         assert invoice.subtotal == Decimal("0")
         assert invoice.total == Decimal("0")
 
-    def test_is_overdue_false(self) -> None:
-        """Test is_overdue when not overdue."""
+    def test_balance_due_calculation(self) -> None:
+        """Test balance_due calculation."""
+        items = [
+            LineItem(description="Item", quantity=1, unit_price=Decimal("100.00")),
+        ]
         invoice = Invoice(
             id="inv-001",
             invoice_number="INV-000001",
             customer_id="CUST-001",
-            due_date=date(2099, 12, 31),
-            status=InvoiceStatus.SENT,
+            items=items,
+            vat_rate=Decimal("0.17"),
+            paid_amount=Decimal("50.00"),
         )
-        assert invoice.is_overdue is False
+        assert invoice.balance_due == Decimal("67.00")
 
-    def test_is_overdue_paid(self) -> None:
-        """Test is_overdue when paid."""
+    def test_add_item_method(self) -> None:
+        """Test add_item method."""
         invoice = Invoice(
             id="inv-001",
             invoice_number="INV-000001",
             customer_id="CUST-001",
-            due_date=date(2020, 1, 1),
-            status=InvoiceStatus.PAID,
         )
-        assert invoice.is_overdue is False
+        item = LineItem(description="Service", quantity=1, unit_price=Decimal("100.00"))
+        invoice.add_item(item)
+        assert len(invoice.items) == 1
+
+    def test_can_transition_to(self) -> None:
+        """Test status transition validation."""
+        invoice = Invoice(
+            id="inv-001",
+            invoice_number="INV-000001",
+            customer_id="CUST-001",
+            status=InvoiceStatus.DRAFT,
+        )
+        assert invoice.can_transition_to(InvoiceStatus.ISSUED) is True
+        assert invoice.can_transition_to(InvoiceStatus.PAID) is False
 
 
 class TestInvoiceStatus:

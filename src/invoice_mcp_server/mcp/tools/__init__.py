@@ -5,6 +5,7 @@ Contains all tool implementations for:
     - Customer management
     - Invoice management
     - Payment processing
+    - Multi-agent synchronization
 """
 
 __all__ = [
@@ -31,11 +32,13 @@ from invoice_mcp_server.mcp.tools.invoice_tools import (
     RecordPaymentTool,
     SendInvoiceTool,
 )
+from invoice_mcp_server.mcp.tools.sync_tools import get_sync_tools
+from invoice_mcp_server.mcp.primitives import Tool
 
 
-def get_all_tools():
+def get_all_tools() -> list[type[Tool]]:
     """Return list of all available tool classes."""
-    return [
+    tools = [
         CreateCustomerTool,
         UpdateCustomerTool,
         DeleteCustomerTool,
@@ -45,3 +48,6 @@ def get_all_tools():
         RecordPaymentTool,
         SendInvoiceTool,
     ]
+    # Add multi-agent sync tools
+    tools.extend(get_sync_tools())
+    return tools

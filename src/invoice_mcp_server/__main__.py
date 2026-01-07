@@ -69,8 +69,10 @@ async def run_http_server() -> None:
 
 def run_cli() -> None:
     """Run the CLI interface."""
-    from invoice_mcp_server.gui.cli import main
-    main()
+    from invoice_mcp_server.gui.cli import cli_app
+    # Remove the 'cli' argument from sys.argv so Click can parse the rest
+    sys.argv = [sys.argv[0]] + sys.argv[2:]
+    cli_app()
 
 
 def run_web() -> None:
@@ -98,19 +100,33 @@ def main() -> None:
     if len(sys.argv) > 1:
         mode = sys.argv[1]
 
+    # Handle help for CLI mode
+    if mode == "cli":
+        run_cli()
+        return
+
     logger.info(f"Starting Invoice MCP Server in {mode} mode")
 
     if mode == "stdio":
         asyncio.run(run_stdio_server())
     elif mode == "http":
         asyncio.run(run_http_server())
-    elif mode == "cli":
-        run_cli()
     elif mode == "web":
         run_web()
+    elif mode in ("--help", "-h"):
+        print("Invoice MCP Server")
+        print("")
+        print("Usage: python -m invoice_mcp_server <mode> [options]")
+        print("")
+        print("Modes:")
+        print("  stdio    Run MCP server with stdio transport")
+        print("  http     Run MCP server with HTTP transport")
+        print("  cli      Run CLI interface (use 'cli --help' for commands)")
+        print("  web      Run web interface")
     else:
         print(f"Unknown mode: {mode}")
         print("Available modes: stdio, http, cli, web")
+        print("Use --help for more information")
         sys.exit(1)
 
 

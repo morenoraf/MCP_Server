@@ -6,6 +6,8 @@ Tests database connection, schema creation, and CRUD operations.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import pytest
 
 from invoice_mcp_server.infrastructure.database import Database
@@ -17,17 +19,17 @@ class TestDatabase:
     @pytest.mark.asyncio
     async def test_connection(self, database: Database) -> None:
         """Test database connection."""
-        assert database._connected is True
+        assert database._connection is not None
 
     @pytest.mark.asyncio
     async def test_disconnect(self, config_with_temp_db) -> None:
         """Test database disconnection."""
         db = Database()
         await db.connect()
-        assert db._connected is True
+        assert db._connection is not None
 
         await db.disconnect()
-        assert db._connected is False
+        assert db._connection is None
 
     @pytest.mark.asyncio
     async def test_execute_query(self, database: Database) -> None:
@@ -38,25 +40,28 @@ class TestDatabase:
     @pytest.mark.asyncio
     async def test_fetch_one(self, database: Database) -> None:
         """Test fetching one row."""
-        row = await database.fetch_one("SELECT 1 as value")
+        cursor = await database.execute("SELECT 1 as value")
+        row = await cursor.fetchone()
         assert row is not None
         assert row["value"] == 1
 
     @pytest.mark.asyncio
     async def test_fetch_all(self, database: Database) -> None:
         """Test fetching all rows."""
-        rows = await database.fetch_all(
+        cursor = await database.execute(
             "SELECT 1 as value UNION SELECT 2 as value"
         )
+        rows = await cursor.fetchall()
         assert len(rows) == 2
 
     @pytest.mark.asyncio
     async def test_tables_created(self, database: Database) -> None:
         """Test that required tables are created."""
-        tables = await database.fetch_all(
+        cursor = await database.execute(
             "SELECT name FROM sqlite_master WHERE type='table'"
         )
-        table_names = [t["name"] for t in tables]
+        rows = await cursor.fetchall()
+        table_names = [t["name"] for t in rows]
 
         assert "customers" in table_names
         assert "invoices" in table_names
@@ -72,14 +77,17 @@ class TestDatabase:
     @pytest.mark.asyncio
     async def test_execute_with_parameters(self, database: Database) -> None:
         """Test executing query with parameters."""
+        now = datetime.utcnow().isoformat()
         await database.execute(
-            "INSERT INTO customers (id, name, email) VALUES (?, ?, ?)",
-            ("test-id", "Test Name", "test@example.com"),
+            "INSERT INTO customers (id, name, email, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+            ("test-id", "Test Name", "test@example.com", now, now),
         )
+        await database.commit()
 
-        row = await database.fetch_one(
+        cursor = await database.execute(
             "SELECT * FROM customers WHERE id = ?",
             ("test-id",),
         )
+        row = await cursor.fetchone()
         assert row is not None
         assert row["name"] == "Test Name"

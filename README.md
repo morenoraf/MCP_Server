@@ -37,8 +37,34 @@ A Model Context Protocol (MCP) server for invoice management with modular archit
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## Quick Start
+
+```bash
+# 1. Clone and install
+git clone <repository-url>
+cd MCP_Server
+pip install -e ".[dev]"
+
+# 2. Test the CLI
+python -m invoice_mcp_server cli customer list
+
+# 3. Run the MCP server
+python -m invoice_mcp_server stdio
+```
+
 ## Installation
 
+### Requirements
+- Python 3.10+
+- pip
+
+### Install for Development
+```bash
+# Install with dev dependencies (pytest, mypy, ruff)
+pip install -e ".[dev]"
+```
+
+### Install for Production
 ```bash
 pip install -e .
 ```
@@ -66,28 +92,104 @@ TRANSPORT_TYPE=stdio
 LOG_LEVEL=INFO
 ```
 
-## Usage
+## Running the Server
 
-### MCP Server (STDIO)
+### MCP Server (STDIO) - For MCP Clients
 ```bash
 python -m invoice_mcp_server stdio
 ```
+Use this mode when connecting from Claude Desktop or other MCP clients.
 
 ### MCP Server (HTTP)
 ```bash
 python -m invoice_mcp_server http
 ```
 
-### CLI Interface
-```bash
-python -m invoice_mcp_server cli customer list
-python -m invoice_mcp_server cli invoice create --customer-id CUST-001
-```
-
 ### Web Interface
 ```bash
 python -m invoice_mcp_server web
 # Access at http://localhost:8080
+```
+
+### Help
+```bash
+python -m invoice_mcp_server --help
+```
+
+## CLI Reference
+
+The CLI provides direct access to all operations for testing and management.
+
+### Customer Commands
+```bash
+# List all customers
+python -m invoice_mcp_server cli customer list
+
+# Create a new customer
+python -m invoice_mcp_server cli customer create --name "Acme Corp" --email "contact@acme.com"
+
+# Create with all fields
+python -m invoice_mcp_server cli customer create --name "Acme Corp" --email "contact@acme.com" --address "123 Main St" --phone "555-1234"
+
+# Delete a customer
+python -m invoice_mcp_server cli customer delete <customer-id>
+```
+
+### Invoice Commands
+```bash
+# List all invoices
+python -m invoice_mcp_server cli invoice list
+
+# Create a new invoice
+python -m invoice_mcp_server cli invoice create --customer-id <customer-id>
+
+# Create with due date and notes
+python -m invoice_mcp_server cli invoice create --customer-id <customer-id> --due-date "2024-12-31" --notes "Project payment"
+
+# Add item to invoice
+python -m invoice_mcp_server cli invoice add-item --invoice-id <invoice-id> --description "Consulting services" --quantity 10 --price 150.00
+
+# Send invoice
+python -m invoice_mcp_server cli invoice send <invoice-id>
+
+# Record payment
+python -m invoice_mcp_server cli invoice pay --invoice-id <invoice-id> --amount 1500.00 --method "bank_transfer"
+```
+
+### Report Commands
+```bash
+# Show statistics
+python -m invoice_mcp_server cli report stats
+
+# Show overdue invoices
+python -m invoice_mcp_server cli report overdue
+```
+
+## MCP Client Configuration
+
+### Claude Desktop
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "invoice-server": {
+      "command": "python",
+      "args": ["-m", "invoice_mcp_server", "stdio"],
+      "cwd": "/path/to/MCP_Server"
+    }
+  }
+}
+```
+
+### Testing MCP Connection
+
+You can test the MCP server by sending JSON-RPC messages via stdio:
+
+```bash
+# Start the server and send an initialize request
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}' | python -m invoice_mcp_server stdio
 ```
 
 ## MCP Primitives
@@ -119,8 +221,70 @@ python -m invoice_mcp_server web
 
 ## Testing
 
+### Run All Tests
 ```bash
-pytest tests/ -v --cov=invoice_mcp_server
+pytest
+```
+
+### Run with Coverage Report
+```bash
+pytest --cov=src/invoice_mcp_server --cov-report=term-missing
+```
+
+### Run Specific Test Files
+```bash
+# Test models
+pytest tests/test_models.py -v
+
+# Test database
+pytest tests/test_database.py -v
+
+# Test SDK
+pytest tests/test_sdk.py -v
+
+# Test MCP server
+pytest tests/test_mcp_server.py -v
+```
+
+### Run Tests by Pattern
+```bash
+# Run all customer-related tests
+pytest -k "customer" -v
+
+# Run all invoice-related tests
+pytest -k "invoice" -v
+```
+
+### Code Quality
+```bash
+# Type checking
+mypy src/invoice_mcp_server
+
+# Linting
+ruff check src/invoice_mcp_server
+
+# Format check
+ruff format --check src/invoice_mcp_server
+```
+
+## Example Workflow
+
+```bash
+# 1. Create a customer
+python -m invoice_mcp_server cli customer create --name "Test Company" --email "test@company.com"
+# Returns: {"id": "uuid-here", "name": "Test Company", ...}
+
+# 2. List customers to get the ID
+python -m invoice_mcp_server cli customer list
+
+# 3. Create an invoice for the customer
+python -m invoice_mcp_server cli invoice create --customer-id <customer-id-from-step-2>
+
+# 4. Add items to the invoice
+python -m invoice_mcp_server cli invoice add-item --invoice-id <invoice-id> --description "Service" --quantity 1 --price 100
+
+# 5. Check statistics
+python -m invoice_mcp_server cli report stats
 ```
 
 ## License
