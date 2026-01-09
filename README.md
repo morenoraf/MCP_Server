@@ -2,6 +2,14 @@
 
 A Model Context Protocol (MCP) server for invoice management with modular architecture.
 
+## Documentation
+
+- [Examples Guide](EXAMPLES.md) - Comprehensive usage examples, workflows, and error handling
+- [Development Guide](DEVELOPMENT.md) - Developer setup, testing, and contributing
+- [Architecture Guide](ARCHITECTURE.md) - Technical architecture and component details
+- [API Reference](API_REFERENCE.md) - MCP tools, resources, and prompts reference
+- [Contributing](CONTRIBUTING.md) - Contribution guidelines
+
 ## Features
 
 - **MCP Protocol Support**: Full implementation of Tools, Resources, and Prompts
